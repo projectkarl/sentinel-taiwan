@@ -1,0 +1,19 @@
+{
+  "name": "sentinel-taiwan",
+  "version": "2.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "check": "node scripts/check.mjs",
+    "smoke": "node scripts/smoke.mjs",
+    "test:cctv": "node scripts/cctv-unit.mjs"
+  },
+  "devDependencies": {
+    "wrangler": "^4.69.0"
+  },
+  "engines": {
+    "node": ">=20 <25"
+  }
+}

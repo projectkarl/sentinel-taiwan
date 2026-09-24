@@ -1,0 +1,480 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#08090a" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Sentinel Taiwan" />
+  <meta name="description" content="SENTINEL // TAIWAN：整合台灣公開車流、CCTV、交通事件、天氣與導航的即時戰情地圖。" />
+  <link rel="manifest" href="/manifest.webmanifest" />
+  <link rel="icon" href="/assets/icon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="/assets/icon-192.png" />
+  <link rel="preconnect" href="https://unpkg.com" crossorigin />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
+  <link rel="stylesheet" href="/styles.css" />
+  <title>SENTINEL // TAIWAN</title>
+</head>
+<body>
+  <div id="app" class="app-shell cinematic-ui">
+    <div id="bootSequence" class="boot-sequence tactical-boot" aria-hidden="true">
+      <div class="boot-classification"><span>◆ SENTINEL COMMAND</span><b>TAIWAN THEATER // RESTRICTED DISPLAY</b><span>NODE 01</span></div>
+      <div class="boot-corner boot-corner-a"></div><div class="boot-corner boot-corner-b"></div>
+      <div class="boot-corner boot-corner-c"></div><div class="boot-corner boot-corner-d"></div>
+      <div class="boot-frame">
+        <div class="boot-kicker">TACTICAL PUBLIC-SIGNAL INTELLIGENCE SYSTEM</div>
+        <div class="boot-planet-sequence" aria-hidden="true">
+          <div class="boot-radar"><i></i><i></i><i></i><span></span></div>
+          <div class="boot-earth"><i class="earth-grid"></i><i class="earth-orbit"></i><span class="earth-lock"></span></div>
+          <div class="boot-taiwan-focus"><img src="/assets/taiwan-silhouette.svg" alt="" /><span></span><i></i><b>TW-OPS</b></div>
+          <div class="boot-crosshair"><i></i><i></i></div>
+        </div>
+        <div class="boot-title">SENTINEL // TAIWAN</div>
+        <div class="boot-sub">COMMAND GRID INITIALIZATION · LIVE PUBLIC SIGNAL FUSION</div>
+        <div class="boot-module-grid" aria-label="系統模組載入狀態">
+          <div id="bootModuleLink" class="boot-module"><span>SAT-LINK</span><b>ACQUIRING</b><i></i></div>
+          <div id="bootModuleFlow" class="boot-module"><span>FLOW-GRID</span><b>SYNC</b><i></i></div>
+          <div id="bootModuleCctv" class="boot-module"><span>CCTV-NET</span><b>SYNC</b><i></i></div>
+          <div id="bootModuleEvent" class="boot-module"><span>EVENT-BUS</span><b>SYNC</b><i></i></div>
+        </div>
+        <div class="boot-progress-meta"><span id="bootProgressText">00%</span><span id="bootTelemetry">ENCRYPTED LINK // TAIWAN GRID</span></div>
+        <div class="boot-track"><i id="bootProgressBar"></i><em></em></div>
+        <div id="bootStatus" class="boot-status">AUTHENTICATING PUBLIC SIGNAL CHANNELS</div>
+        <div class="boot-codes"><span>ZERO-KEY</span><span>PUBLIC SIGNALS</span><span>NO ID TRACKING</span><span>LIVE GRID</span></div>
+      </div>
+      <div class="boot-footer"><span>LAT 23.6978°N</span><span>LON 120.9605°E</span><span id="bootClock">--:--:--</span></div>
+    </div>
+    <div class="hud-frame" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+    <header class="topbar hud-panel">
+      <div class="brand" id="brandHome" role="button" tabindex="0" aria-label="回到台灣全域監控總覽" title="回到台灣全域監控總覽">
+        <div class="brand-mark" aria-hidden="true"><span></span><i></i></div>
+        <div>
+          <div class="brand-name">SENTINEL <b>//</b> TAIWAN</div>
+          <div class="brand-sub">PUBLIC SIGNAL COMMAND GRID</div>
+        </div>
+      </div>
+      <div class="topbar-center" aria-hidden="true">
+        <div class="topbar-tagline">REAL-TIME INTELLIGENCE <span>//</span> A CLEARER TAIWAN</div>
+        <div class="source-pills">
+          <span><i class="p-live"></i><b>LIVE</b><em>field data</em></span>
+          <span><i class="p-observed"></i><b>OBSERVED</b><em>official</em></span>
+          <span><i class="p-model"></i><b>MODEL</b><em>forecast</em></span>
+          <span><i class="p-derived"></i><b>DERIVED</b><em>fusion</em></span>
+        </div>
+      </div>
+      <div class="status-strip" aria-live="polite">
+        <span id="clock">--:--:--</span>
+        <span class="sep"></span>
+        <span id="networkState">ZERO-KEY LIVE</span>
+        <span class="sep"></span>
+        <button class="micro-btn" id="installBtn" hidden>INSTALL</button>
+        <button class="micro-btn" id="mapFocusBtn" aria-label="切換地圖專注模式">MAP FOCUS</button>
+        <button class="micro-btn" id="shareBtn" aria-label="分享目前戰情">SHARE</button>
+        <button class="micro-btn" id="openSettings" aria-label="開啟設定">⚙</button>
+      </div>
+    </header>
+
+    <main class="stage">
+      <aside class="ops-rail hud-panel" aria-label="戰情主選單">
+        <button class="active" data-rail="overview" title="全台總覽"><span>⌂</span><b>OVERVIEW</b><small>全台總覽</small></button>
+        <button data-command="traffic" title="交通流量"><span>≋</span><b>TRAFFIC</b><small>即時車流</small></button>
+        <button data-command="cctv" title="公開監視器"><span>◫</span><b>CCTV</b><small>公開影像</small></button>
+        <button data-command="weather" title="天氣"><span>☁</span><b>WEATHER</b><small>天候情報</small></button>
+        <button data-rail="environment" title="環境態勢"><span>◉</span><b>ENVIRONMENT</b><small>AQI / 水情</small></button>
+        <button data-command="news" title="相關新聞"><span>▤</span><b>NEWS</b><small>區域消息</small></button>
+        <button data-mission="theater" title="全域訊號"><span>⌁</span><b>INTELLIGENCE</b><small>Global Context</small></button>
+        <button data-rail="tools" title="系統設定"><span>⚙</span><b>TOOLS</b><small>感測器 / 系統</small></button>
+        <div class="rail-foot"><i></i><span>TW // OPS</span></div>
+      </aside>
+      <div id="map" class="map" aria-label="台灣情報地圖"></div>
+      <section id="navImmersive" class="nav-immersive" aria-label="免費沉浸式導航" hidden>
+        <div class="nav-immersive-horizon" aria-hidden="true"><span></span><i></i></div>
+        <div class="nav-immersive-heading"><small>FREE 3D // GPS + ROUTE</small><b id="immersiveHeading">HDG ---°</b><em>ZERO-KEY · NOT STREET VIEW</em></div>
+        <div class="nav-immersive-road" aria-hidden="true">
+          <i class="lane lane-a"></i><i class="lane lane-b"></i><i class="lane lane-c"></i>
+          <span class="route-beam"></span>
+        </div>
+        <div class="nav-immersive-guide">
+          <strong id="immersiveArrow">↑</strong>
+          <span><small id="immersiveDistance">準備導航</small><b id="immersiveText">沿目前路線前進</b><em id="immersiveRoad">ROUTE GUIDANCE</em></span>
+        </div>
+        <div class="nav-immersive-stats"><span><small>SPEED</small><b id="immersiveSpeed">--</b><em>km/h</em></span><span><small>REMAIN</small><b id="immersiveRemain">--</b><em>km</em></span></div>
+        <button id="immersiveCctv" class="nav-immersive-cctv" type="button" hidden><small>LIVE CCTV AHEAD</small><b id="immersiveCctvName">PUBLIC CAMERA</b><em id="immersiveCctvDistance">-- km</em></button>
+      </section>
+      <div class="map-vignette" aria-hidden="true"></div>
+      <div class="scanline" aria-hidden="true"></div>
+      <div class="theater-grid" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+      <div class="reticle" aria-hidden="true"><span></span></div>
+      <div id="theaterStandby" class="theater-standby" aria-live="polite">
+        <span class="theater-kicker">TAIWAN INTEL // STANDBY</span>
+        <b>NO TARGET SELECTED</b>
+        <small>SEARCH A LOCATION · ALL PUBLIC INTEL LOADS AUTOMATICALLY</small>
+        <div class="theater-auth"><span>PUBLIC INTEL</span><i></i><span>ZERO-KEY</span><i></i><span>SESSION LOCAL</span></div>
+      </div>
+      <div id="sweepFx" class="sweep-fx" aria-hidden="true"><span></span></div>
+      <div id="signalTrace" class="signal-trace" aria-hidden="true"><i></i><span>SIGNAL ACQUISITION</span></div>
+      <div id="targetLock" class="target-lock" aria-live="polite"><span class="target-kicker">TARGET ACQUIRED</span><b id="targetLockName">—</b><small id="targetLockCoord">—</small></div>
+      <div id="geoTransfer" class="geo-transfer" aria-hidden="true"><div class="geo-ring"><i></i><span></span></div><div class="geo-copy"><small>SATELLITE HANDOFF</small><b id="geoTransferName">RELOCATING SIGNAL</b><em id="geoTransferCoord">GRID TRANSFER</em></div></div>
+      <div class="map-telemetry telemetry-left" aria-hidden="true"><span>GRID</span><b id="gridTelemetry">TW // 23.73N 120.94E</b></div>
+      <div class="map-telemetry telemetry-right" aria-hidden="true"><span>LINK</span><b id="linkTelemetry">PUBLIC SIGNAL // STANDBY</b></div>
+      <button id="provenanceRibbon" class="provenance-ribbon hud-panel" type="button" aria-label="查看資料來源與狀態"><span>FLOW <b>LIVE</b></span><i></i><span>CCTV <b>LIVE</b></span><i></i><span>WX <b>MODEL</b></span><i></i><span>AQI <b>OBS</b></span><i></i><span>FUSION <b>DERIVED</b></span></button>
+      <div class="sensor-rack hud-panel" aria-label="感測器視覺快速切換">
+        <span>SENSOR LOOK</span>
+        <button data-sensor="normal" class="active">NORMAL</button>
+        <button data-sensor="nvg">NVG</button>
+        <button data-sensor="flir">FLIR</button>
+        <button data-sensor="noir">NOIR</button>
+        <button data-sensor="crt">CRT</button>
+      </div>
+      <div class="flow-legend" aria-label="高速公路即時流速圖例">
+        <span><i class="clear"></i>順暢 70+</span>
+        <span><i class="moderate"></i>稍慢 50–69</span>
+        <span><i class="slow"></i>緩慢 30–49</span>
+        <span><i class="critical"></i>壅塞 &lt;30</span>
+        <em>km/h · LIVE FLOW</em>
+      </div>
+      <nav id="mapLayerDock" class="map-layer-dock hud-panel" aria-label="地圖與圖層快速切換">
+        <div class="map-layer-source">
+          <button type="button" data-map-source="satellite" class="active" aria-pressed="true" title="衛星＋標註">SAT</button>
+          <button type="button" data-map-source="tactical" aria-pressed="false" title="清楚街圖">MAP</button>
+        </div>
+        <span class="map-layer-sep"></span>
+        <button type="button" id="freewayModeBtn" aria-pressed="false" title="全台國道即時壅塞色帶模式">HWY</button>
+        <span class="map-layer-sep"></span>
+        <button type="button" data-layer-toggle="flow" class="active" aria-pressed="true" title="高速公路即時流速">FLOW</button>
+        <button type="button" data-layer-toggle="cctv" class="active" aria-pressed="true" title="公開 CCTV">CAM</button>
+        <button type="button" data-layer-toggle="event" class="active" aria-pressed="true" title="交通事件">EVT</button>
+        <button type="button" data-layer-toggle="speed" class="nav-only-layer" aria-pressed="false" title="導航中顯示公開測速點" hidden>SPD</button>
+      </nav>
+
+      <section id="nationalOverview" class="national-overview hud-panel" aria-label="全台即時戰情">
+        <div class="national-head">
+          <div><span>TAIWAN NATIONAL GRID · CONGESTION + CCTV</span><b>全台即時戰情</b></div>
+          <div class="national-head-actions"><button type="button" id="nationalCompactBtn" aria-label="收合全台戰情摘要">−</button><button type="button" id="nationalResetBtn" aria-label="回到台灣全圖">TAIWAN</button></div>
+        </div>
+        <div class="national-metrics">
+          <div><small>CRITICAL</small><b id="nationalCriticalCount">—</b></div>
+          <div><small>EVENTS</small><b id="nationalEventCount">—</b></div>
+          <div><small>CCTV</small><b id="nationalCameraCount">—</b></div>
+          <div><small>AVG FLOW</small><b id="nationalAvgFlow">—</b></div>
+        </div>
+        <div class="flow-legend" aria-label="國道即時流量顏色"><span class="clear"><i></i>順暢</span><span class="moderate"><i></i>稍慢</span><span class="slow"><i></i>緩慢</span><span class="critical"><i></i>壅塞</span></div>
+        <div id="nationalNetworkSummary" class="national-network-summary" aria-label="全台國道路網摘要"><span>FLOW NETWORK INITIALIZING…</span></div>
+        <div class="national-body">
+          <div id="nationalHotspotList" class="national-hotspot-list"><div class="national-empty">正在融合全台國道路況…</div></div>
+          <div id="nationalPreview" class="national-preview">
+            <div class="national-preview-head"><span>HOTSPOT CCTV</span><b id="nationalPreviewTitle">AUTO SELECT</b></div>
+            <div id="nationalPreviewStage" class="national-preview-stage"><div class="camera-placeholder">等待壅塞熱點與附近公開 CCTV…</div></div>
+            <small id="nationalPreviewMeta">PUBLIC CAMERA · AUTO HANDOFF</small>
+          </div>
+        </div>
+        <div class="national-foot"><span id="nationalStatusText">NATIONAL SIGNAL FUSION</span><em id="nationalDataAge">LIVE</em></div>
+      </section>
+
+      <section class="command hud-panel" aria-label="查詢控制台">
+        <div class="command-headline"><div class="command-kicker"><span class="live-dot"></span> INTELLIGENCE SEARCH</div><div class="search-mode-tabs" id="searchModeTabs" role="tablist" aria-label="查詢模式"><button type="button" class="active" data-search-mode="monitor" aria-selected="true">地點監控</button><button type="button" data-search-mode="nav" aria-selected="false">導航 A→B</button></div></div>
+        <form id="searchForm" class="search-row">
+          <button type="button" class="voice-btn" id="voiceBtn" aria-label="語音查詢">
+            <span class="voice-core"></span>
+          </button>
+          <label class="search-box">
+            <span class="search-prefix">⌕</span>
+            <input id="queryInput" type="search" autocomplete="off" placeholder="搜尋地點／路口／CCTV，例如 101、北車、忠孝東路與基隆路" aria-label="地址或查詢內容" />
+          </label>
+          <button type="button" id="searchLocateBtn" class="search-locate-btn" aria-label="使用目前位置並持續跟隨" aria-pressed="false" title="使用目前位置">◎</button>
+          <button class="go-btn" type="submit">查詢</button>
+        </form>
+        <div id="poiSuggestions" class="poi-suggestions" role="listbox" aria-label="地點建議" hidden></div>
+        <div class="command-context">
+          <div class="ab-route" id="abRoutePanel" aria-label="A 到 B 點到點設定" hidden>
+            <label class="ab-point"><span>A</span><input id="abOrigin" value="台北 101" aria-label="A 點起點" /></label>
+            <button type="button" id="originChip" class="origin-chip ab-locate" aria-label="切換台北 101 與目前 GPS 位置"><span>◎</span><b id="originLabel">台北 101</b><em>GPS</em><small>LOC</small></button>
+            <button type="button" id="abSwap" class="ab-swap" aria-label="交換起點與目的地">⇄</button>
+            <label class="ab-point"><span>B</span><input id="abTarget" placeholder="目的地（搜尋後自動帶入）" aria-label="B 點目的地" /></label>
+            <button type="button" id="abRouteBtn" class="ab-route-btn">路線</button>
+          </div>
+          <div class="command-hint" id="commandHint"><b>AUTO INTEL</b><span>搜尋地點或路口；自動載入附近 CCTV、車流、天氣與事件。</span></div>
+          <details class="advanced-ops">
+            <summary>進階監控</summary>
+            <div class="mission-deck" aria-label="進階監控模式">
+              <button data-mission="sweep"><span>01</span><b>SWEEP</b><small>區域掃描</small></button>
+              <button data-mission="watch"><span>02</span><b>WATCH</b><small>CCTV 情報牆</small></button>
+              <button data-mission="mission"><span>03</span><b>MISSION</b><small>目前路線簡報</small></button>
+              <button data-mission="sentinel"><span>04</span><b>SENTINEL</b><small>低速異常監測</small></button>
+              <button data-mission="theater"><span>05</span><b>THEATER</b><small>全域訊號</small></button>
+            </div>
+          </details>
+        </div>
+        <div id="voiceTranscript" class="voice-transcript" hidden></div>
+      </section>
+
+      <section id="cockpit3d" class="cockpit-3d" aria-label="3D 座艙追蹤" hidden>
+        <div id="cesiumCockpitCanvas" class="cesium-cockpit-canvas"></div>
+        <div class="cockpit-3d-frame" aria-hidden="true"><i></i><i></i><i></i><i></i><span></span></div>
+        <div class="cockpit-3d-top hud-panel"><span>3D COCKPIT // ADS-B LIVE</span><b id="cockpit3dName">AIR CONTACT</b><em id="cockpit3dMeta">OSM ELLIPSOID VIEW</em><button id="exitCockpit3d" class="micro-btn">EXIT 3D</button></div>
+        <div class="cockpit-3d-bottom hud-panel"><span id="cockpit3dSpeed">SPD —</span><span id="cockpit3dAlt">ALT —</span><span id="cockpit3dHeading">HDG —</span><em>ZERO-KEY IMAGERY · WGS84 ELLIPSOID · NOT PHOTOREAL 3D</em></div>
+      </section>
+
+      <aside class="intel hud-panel" id="intelPanel" aria-label="即時情報">
+        <div class="panel-head">
+          <div>
+            <span class="eyebrow">SIDE INTELLIGENCE // 地圖外戰情</span>
+            <h2 id="intelTitle">TAIPEI CENTER</h2>
+            <small id="intelSync" class="intel-sync">PUBLIC SIGNALS · AUTO</small>
+          </div>
+          <button id="intelCollapse" class="icon-btn" aria-label="收合情報面板">−</button>
+        </div>
+        <div class="intel-tabs" aria-label="情報分類快速跳轉">
+          <button class="active" data-intel-jump="targetBriefCard">OVERVIEW</button>
+          <button data-intel-jump="situationCard">STATUS</button>
+          <button data-intel-jump="autoIntelCard">TRAFFIC</button>
+          <button data-intel-jump="weatherCard">WEATHER</button>
+          <button data-intel-jump="inlineCameraCard">CAM LIST</button>
+        </div>
+        <div class="side-intel-mode" aria-hidden="true"><span>MAP = LIVE CCTV</span><i></i><span>SIDE = FUSED INTEL</span></div>
+        <div id="intelBody" class="intel-body">
+          <article class="intel-card weather-card" id="weatherCard">
+            <div class="card-label">WEATHER // 天氣</div>
+            <div class="weather-main"><strong id="weatherTemp">--°</strong><span id="weatherText">TARGET REQUIRED</span></div>
+            <div class="mini-grid">
+              <div><small>RAIN</small><b id="weatherRain">STBY</b></div>
+              <div><small>WIND</small><b id="weatherWind">STBY</b></div>
+              <div><small>FEELS</small><b id="weatherFeels">STBY</b></div>
+            </div>
+          </article>
+          <article class="intel-card target-brief-card" id="targetBriefCard">
+            <div class="card-label">TARGET INTEL // 自動摘要</div>
+            <div id="targetBrief" class="target-brief"><span>NO TARGET</span><b>等待地點查詢</b><em>STANDBY</em></div>
+          </article>
+      <section id="navHud" class="nav-hud hud-panel" aria-label="導航情報" hidden>
+        <div class="nav-head"><span><i class="live-dot"></i>LIVE NAVIGATION</span><div class="nav-head-actions"><button id="navViewBtn" class="micro-btn" type="button" aria-pressed="false">FREE 3D</button><button id="stopNavBtn" class="micro-btn">結束導航</button></div></div>
+        <div class="nav-turn" aria-live="polite">
+          <strong id="navTurnArrow">↑</strong>
+          <span><small id="navTurnDistance">準備導航</small><b id="navTurnText">沿目前路線繼續行駛</b><em id="navTurnRoad">ROUTE GUIDANCE</em></span>
+        </div>
+        <div id="navTurnScene" class="nav-turn-scene" hidden>
+          <div class="nav-turn-scene-media"><img id="navTurnSceneImage" alt="轉彎處公開街景參考"><span>HISTORICAL STREET IMAGE</span></div>
+          <div class="nav-turn-scene-copy"><small>KARTAVIEW // TURN VISUAL</small><b id="navTurnSceneTitle">前方轉向參考</b><em id="navTurnSceneMeta">非即時影像 · 僅輔助辨識道路環境</em></div>
+          <strong id="navTurnSceneArrow">↑</strong>
+        </div>
+        <div class="nav-ahead-strip" aria-label="導航前方情報">
+          <span><small>FLOW AHEAD</small><b id="navAheadFlow">—</b></span>
+          <span><small>CCTV</small><b id="navAheadCctv">—</b></span>
+          <span><small>EVENT</small><b id="navAheadEvent">—</b></span>
+        </div>
+        <div class="nav-core">
+          <div class="nav-speed"><small>GROUND SPEED</small><strong id="navSpeed">--</strong><span>km/h</span><em id="navLimitBadge" class="nav-limit-badge" hidden>ENF --</em></div>
+          <div class="nav-heading"><small>HEADING</small><b id="navHeading">---°</b><span id="navTargetName">TARGET</span></div>
+          <div class="nav-remaining"><small>REMAINING</small><b id="navRemaining">-- km</b><span id="navEta">-- min</span></div>
+        </div>
+        <div id="navAlert" class="nav-alert"><span>ROUTE LINK</span><b>等待定位訊號</b><em>STANDBY</em></div>
+        <button id="navCameraHandoff" class="nav-camera-handoff" type="button" hidden>
+          <span id="navCameraThumb" class="nav-camera-thumb"><i>LINK</i></span>
+          <span class="nav-camera-copy"><small>CAMERA HANDOFF</small><b id="navCameraName">PUBLIC CCTV</b><em id="navCameraMeta">SIGNAL STANDBY</em></span>
+          <span class="cam-pulse"></span>
+        </button>
+      </section>
+      <section id="trackHud" class="track-hud hud-panel" aria-label="目標追蹤座艙" hidden>
+        <div class="track-head"><span><i class="live-dot"></i>CONTACT TRACK // 公開訊號</span><div><button id="cockpitToggleBtn" class="micro-btn">COCKPIT 3D</button><button id="stopTrackBtn" class="micro-btn">RELEASE</button></div></div>
+        <div class="track-core">
+          <div><small>CONTACT</small><b id="trackName">—</b><em id="trackType">PUBLIC SIGNAL</em></div>
+          <div><small>ALT / DEPTH</small><b id="trackAltitude">—</b><em id="trackSource">SOURCE N/A</em></div>
+          <div><small>SPEED</small><b id="trackSpeed">—</b><em id="trackHeading">HDG —</em></div>
+        </div>
+        <div id="trackStatus" class="track-status"><span>LOCK STATUS</span><b>TARGET ACQUIRED</b><em>FOLLOW READY</em></div>
+        <div id="trackDetails" class="track-details" aria-label="追蹤目標詳細資料"></div>
+      </section>
+          <article class="intel-card auto-intel-card" id="autoIntelCard">
+            <div class="card-label">AREA SIGNALS // 自動整合</div>
+            <div id="autoIntelOverview" class="auto-intel-overview"><div><small>事件</small><b>—</b></div><div><small>CCTV</small><b>—</b></div><div><small>新聞</small><b>—</b></div><div><small>航空</small><b>—</b></div></div>
+            <div id="autoTrafficFeed" class="auto-feed"><div class="auto-empty">搜尋地點後自動顯示附近公開交通事件。</div></div>
+            <div id="autoNewsFeed" class="auto-feed"><div class="auto-empty">相關區域新聞會自動出現在這裡。</div></div>
+            <div id="autoSignalFeed" class="auto-feed"><div class="auto-empty">公開流速、測速與區域訊號待命。</div></div>
+          </article>
+          <article class="intel-card situation-card" id="situationCard">
+            <div class="card-label">AREA STATUS // 區域態勢</div>
+            <div id="situationBrief" class="situation-brief nominal">
+              <span id="situationLevel">NOMINAL</span>
+              <b id="situationHeadline">區域情報待命</b>
+              <em id="situationNarrative">搜尋地點後，自動融合 AQI、淹水、施工、交通與天氣訊號。</em>
+            </div>
+            <div class="situation-grid">
+              <div><small>OFFICIAL AQI</small><b id="situationAqi">N/A</b><em id="situationAqiMeta">官方測站 N/A</em></div>
+              <div><small>FLOOD</small><b id="situationFlood">0</b><em>警戒訊號</em></div>
+              <div><small>ROAD WORK</small><b id="situationWork">0</b><em>影響 / 總數</em></div>
+              <div><small>PARKING</small><b id="situationParking">N/A</b><em>公開動態</em></div>
+            </div>
+            <div id="floodFeed" class="situation-feed"><div class="auto-empty">淹水／水情警戒待命。</div></div>
+            <div id="parkingFeed" class="situation-feed"><div class="auto-empty">停車情報待命。</div></div>
+            <div id="constructionFeed" class="situation-feed"><div class="auto-empty">施工情報待命。</div></div>
+            <div id="freshnessFeed" class="freshness-feed"><span>DATA AGE</span><em>WAITING FOR SIGNAL</em></div>
+            <div class="watch-zone-bar">
+              <button type="button" id="watchZoneBtn">＋ WATCH ZONE</button>
+              <div id="watchZoneList" class="watch-zone-list" aria-label="監控區快捷清單"></div>
+            </div>
+          </article>
+          <article class="intel-card inline-camera-card" id="inlineCameraCard" hidden>
+            <div class="card-label camera-card-label"><span>LIVE CCTV // 即時監控</span><div class="camera-card-actions"><button type="button" id="cameraAnalyzeBtn" aria-pressed="false" title="在目前 CCTV 畫面上持續進行瀏覽器端人／車類別分析">LIVE ANALYSIS</button><button type="button" id="inlineCameraExpand" aria-pressed="false" title="放大 CCTV">⛶ 放大</button></div></div>
+            <div class="inline-camera-head"><b id="inlineCameraTitle">PUBLIC CCTV</b><span id="inlineCameraSignal">AUTO SELECT</span></div>
+            <div id="inlineCameraStage" class="inline-camera-stage"><div class="camera-placeholder">正在等待公開 CCTV 訊號…</div></div>
+            <div id="inlineCameraMeta" class="inline-camera-meta"></div>
+            <div id="inlineCameraSensor" class="camera-intel inline-camera-sensor" hidden></div>
+            <section id="cameraVisionLab" class="camera-vision-lab" hidden aria-label="CCTV 影格分析">
+              <div class="vision-lab-head"><div><span>ON-DEVICE LIVE VISION</span><b id="visionLabStatus">READY</b></div><button type="button" id="visionLabClose">停止分析</button></div>
+              <canvas id="cameraAnalysisCanvas" width="640" height="360" aria-hidden="true"></canvas>
+              <div id="cameraAnalysisMetrics" class="vision-lab-metrics"><div><small>PERSON</small><b>—</b></div><div><small>VEHICLE</small><b>—</b></div><div><small>CROWD</small><b>—</b></div><div><small>TRAFFIC</small><b>—</b></div></div>
+              <div id="cameraAnalysisTypes" class="vision-type-list">按 LIVE ANALYSIS 後，分析框會直接疊在目前 CCTV 畫面並定期更新。辨識人、汽車、公車、卡車、機車與自行車等類別；不做人臉、車牌、身份或跨鏡頭追蹤。</div>
+            </section>
+            <div id="inlineCameraChoices" class="inline-camera-choices"></div>
+          </article>
+          <article class="intel-card route-card" id="routeCard">
+            <div class="card-label">A → B // 路線比較</div>
+            <div class="route-empty" id="routeEmpty">輸入目的地後，自動以目前起點產生路線與情報。</div>
+            <div id="routeInfo" hidden>
+              <div class="route-status"><span>A → B LOCKED</span><b id="routeRecommendation">RECOMMENDED PATH</b></div>
+              <div class="route-summary"><strong id="routeEta">-- min</strong><span id="routeDistance">-- km</span><em id="routeMode">RECOMMENDED</em></div>
+              <div class="route-points"><span id="routeFrom">START</span><i></i><span id="routeTo">TARGET</span></div>
+              <div id="routeThreatSummary" class="route-threat-summary" hidden></div>
+              <div id="routeOptions" class="route-options" aria-label="可選路線"></div>
+              <div id="routeTimeMachine" class="route-time-machine" hidden data-trend="collecting">
+                <div class="route-time-head"><span>FLOW TIME MACHINE // 近 60 分鐘</span><b id="routeFlowTrend">COLLECTING</b></div>
+                <div id="routeFlowHistory" class="route-flow-history" aria-label="流速時間序列"></div>
+                <div class="route-time-scrub"><input id="routeTimeRange" type="range" min="0" max="0" value="0" step="1" aria-label="選擇歷史流速時間點"><span id="routeTimeValue">等待足夠歷史快照</span></div>
+              </div>
+              <button id="startNavBtn" class="nav-start-btn" type="button">開始導航</button>
+            </div>
+          </article>
+          <article class="intel-card ops-inline-card" id="opsInlineCard" hidden>
+            <div class="ops-inline-head"><div><span class="eyebrow" id="opsInlineEyebrow">LIVE OPS</span><h3 id="opsInlineTitle">INTELLIGENCE</h3></div><b id="opsInlineCode">LIVE</b></div>
+            <div id="opsInlineBody" class="ops-body"></div>
+          </article>
+          <details class="intel-card signal-card data-status-card">
+            <summary>資料狀態 · 自動更新</summary>
+            <div class="card-label">DATA STATUS // 自動更新</div>
+            <div class="signal-list">
+              <button id="trafficSignal"><span class="sig warning"></span><b>交通事件</b><em id="trafficCount">STBY</em></button>
+              <button id="flowSignal"><span class="sig flow"></span><b>國道流速</b><em id="flowStatus">STBY</em></button>
+              <button id="cameraSignal"><span class="sig live"></span><b>公開 CCTV</b><em id="cameraCount">STBY</em></button>
+              <button id="newsSignal"><span class="sig news"></span><b>附近新聞</b><em id="newsCount">STBY</em></button>
+              <button id="speedSignal"><span class="sig speed"></span><b>公開測速點</b><em id="speedCount">STBY</em></button>
+              <button id="airSignal"><span class="sig air"></span><b>航空公開訊號</b><em id="airCount">STBY</em></button>
+              <button id="quakeSignal"><span class="sig quake"></span><b>地震訊號</b><em id="quakeCount">STBY</em></button>
+              <button id="sourceSignal"><span class="sig"></span><b>資料來源</b><em id="sourceCount">18</em></button>
+            </div>
+          </details>
+          <p class="intel-note">公開資料僅供資訊參考。行車請以道路現場、官方號誌與主管機關公告為準。<br><span class="credits">Sources: OSM · Open-Meteo · OSRM · 高速公路局 · 警廣 · 警政署 · 環境部 · 水利署 · 臺北停管處 · 臺北工務局 · ADSB.lol · USGS</span></p>
+        </div>
+      </aside>
+
+      <section class="route-drawer hud-panel" id="routeDrawer" aria-label="路線規劃" hidden>
+        <div class="panel-head compact">
+          <div><span class="eyebrow">POINT TO POINT</span><h2>A → B ROUTE</h2></div>
+          <button class="icon-btn" data-close="routeDrawer">×</button>
+        </div>
+        <div class="route-form">
+          <label><span>ORIGIN</span><input id="routeOrigin" placeholder="我的位置或地址" /></label>
+          <label><span>TARGET</span><input id="routeTarget" placeholder="目的地" /></label>
+          <button id="planRouteBtn" class="primary-action">CALCULATE ROUTE</button>
+        </div>
+      </section>
+
+      <section class="camera-drawer hud-panel" id="cameraDrawer" aria-label="監視器畫面" hidden>
+        <div class="panel-head compact">
+          <div><span class="eyebrow">PUBLIC CCTV</span><h2 id="cameraTitle">CAMERA FEED</h2></div>
+          <button class="icon-btn" data-close="cameraDrawer">×</button>
+        </div>
+        <div class="camera-stage" id="cameraStage">
+          <div class="camera-placeholder">選擇地圖上的 CCTV 標記</div>
+        </div>
+        <div class="camera-meta" id="cameraMeta"></div>
+        <div class="camera-intel" id="cameraIntel" hidden></div>
+      </section>
+
+      <section class="ops-drawer hud-panel" id="opsDrawer" aria-label="區域情報" hidden>
+        <div class="panel-head compact">
+          <div><span class="eyebrow" id="opsEyebrow">CLASSIFIED INTEL</span><h2 id="opsTitle">AREA SIGNAL SCAN</h2></div>
+          <button class="icon-btn" data-close="opsDrawer">×</button>
+        </div>
+        <div class="ops-status"><span id="opsCode">STANDBY</span><i></i><span id="opsTimestamp">--:--:--</span></div>
+        <div id="opsBody" class="ops-body"></div>
+      </section>
+
+      <section class="wall-drawer hud-panel" id="wallDrawer" aria-label="CCTV 情報牆" hidden>
+        <div class="panel-head compact">
+          <div><span class="eyebrow">WATCH GRID</span><h2>CCTV WALL</h2></div>
+          <button class="icon-btn" data-close="wallDrawer">×</button>
+        </div>
+        <div id="wallMain" class="wall-main"><div class="camera-placeholder">SELECT CAMERA</div></div>
+        <div class="wall-main-meta"><b id="wallMainTitle">NO FEED SELECTED</b><span id="wallMainMeta">PUBLIC SIGNAL</span></div>
+        <div id="wallGrid" class="wall-grid"></div>
+      </section>
+
+      <section class="source-drawer hud-panel" id="sourceDrawer" aria-label="資料來源與狀態" hidden>
+        <div class="panel-head compact">
+          <div><span class="eyebrow">PROVENANCE</span><h2>SOURCE STATUS</h2></div>
+          <button class="icon-btn" data-close="sourceDrawer">×</button>
+        </div>
+        <div class="source-legend"><span class="src-live">LIVE</span><span class="src-observed">OBSERVED</span><span class="src-derived">DERIVED</span><span class="src-model">MODEL</span><span class="src-estimated">ESTIMATED</span><span class="src-static">STATIC</span><span class="src-visual">VISUAL</span><span class="src-simulated">SIMULATED</span><span class="src-unavailable">UNAVAILABLE</span></div>
+        <p class="source-explain">每個圖層都標示來源與資料性質。LIVE 不代表零延遲；OBSERVED 為官方測站觀測；DERIVED 為公開訊號計算的推論；MODEL / ESTIMATED 不應視為即時觀測；VISUAL 只代表畫面效果；SIMULATED 為合成資料，本版目前沒有啟用中的模擬交通／火箭圖層。</p>
+        <div id="sourceMatrix" class="source-matrix"></div>
+        <div class="source-original-note"><b>SOURCE TRANSPARENCY</b><span>系統明確區分 LIVE / OBSERVED / MODEL / DERIVED / ESTIMATED / VISUAL / UNAVAILABLE；國道 FLOW 採官方公開即時資料，不以模擬交通冒充即時資訊。</span></div>
+      </section>
+
+      <section class="settings hud-panel" id="settingsPanel" hidden>
+        <div class="panel-head compact">
+          <div><span class="eyebrow">SYSTEM</span><h2>SETTINGS</h2></div>
+          <button class="icon-btn" data-close="settingsPanel">×</button>
+        </div>
+        <div class="setting-row"><div><b>動態情報介面</b><small>目標鎖定、掃描、訊號接管與任務轉場；會遵循系統「減少動態效果」</small></div><button id="motionToggle" class="toggle active" aria-pressed="true"><span></span></button></div>
+        <div class="setting-row"><div><b>地圖視覺特效</b><small>預設關閉，保持原始衛星／街圖清晰；需要電影感時再手動開啟</small></div><button id="mapFxToggle" class="toggle" aria-pressed="false"><span></span></button></div>
+        <div class="setting-row"><div><b>自動載入天氣</b><small>移動地圖後更新中心點資訊</small></div><button id="weatherAutoToggle" class="toggle active" aria-pressed="true"><span></span></button></div>
+        <div class="setting-row"><div><b>語音回饋</b><small>以系統語音讀出查詢結果</small></div><button id="speechToggle" class="toggle" aria-pressed="false"><span></span></button></div>
+        <div class="setting-row"><div><b>LIVE VISION ANALYTICS</b><small>CCTV + VD 車道速度／占有率／流量 Sensor Fusion；適用所有有足夠公開 lane-level VD 的路段與隧道入口，不辨識車牌或人臉</small></div><button id="vehicleIntelToggle" class="toggle active" aria-pressed="true"><span></span></button></div>
+        <div class="setting-row"><div><b>公開測速點警示</b><small>導航中提早約 2 km / 1 km / 400 m 提醒官方公開固定／區間測速執法點，並在資料有提供時主動顯示速限；不偵測臨檢或移動式警力</small></div><button id="speedAlertToggle" class="toggle active" aria-pressed="true"><span></span></button></div>
+        <div class="setting-row"><div><b>CCTV 自動接管</b><small>導航移動時自動切換前方公開 CCTV 情報；只切換公開鏡頭，不追蹤個別車輛</small></div><button id="cameraHandoffToggle" class="toggle active" aria-pressed="true"><span></span></button></div>
+        <div class="setting-row"><div><b>戰術地點轉場</b><small>跨區移動時使用衛星鎖定、訊號切換與座標轉移動畫</small></div><button id="transferFxToggle" class="toggle active" aria-pressed="true"><span></span></button></div>
+        <div class="setting-stack"><div><b>MAP SOURCE</b><small>預設使用原專案 Zero-Key 思路的 Esri 衛星影像＋地名/道路標註；可一鍵切換清楚街圖</small></div><div class="map-modes" id="mapModes"><button data-map-source="satellite" class="active" aria-pressed="true">SATELLITE</button><button data-map-source="tactical" aria-pressed="false">STREET</button></div></div>
+        <div class="setting-stack"><div><b>SENSOR LOOK</b><small>NORMAL / NVG / FLIR / NOIR / CRT / SNOW 僅切換戰術視覺效果，不改變底層資料內容</small></div><div class="sensor-modes" id="sensorModes"><button data-sensor="normal" class="active">NORMAL</button><button data-sensor="nvg">NVG</button><button data-sensor="flir">FLIR</button><button data-sensor="noir">NOIR</button><button data-sensor="crt">CRT</button><button data-sensor="snow">SNOW</button></div></div>
+        <div class="setting-row"><div><b>DETECTION OVERLAY</b><small>在可見公開訊號標記加上識別框與 ID；CCTV 的 LIVE ANALYSIS 會將人／車類別框直接疊在目前影像並定期更新；不做人臉／車牌辨識</small></div><button id="detectionToggle" class="toggle" aria-pressed="false"><span></span></button></div>
+        <div class="setting-row"><div><b>VOICE MARKUP</b><small>Zero-Key 本地語音指令：例如「標記這裡集合點」、「清除標註」、「切換夜視」、「追蹤最近航班」</small></div><button id="voiceMarkupToggle" class="toggle active" aria-pressed="true"><span></span></button></div>
+        <div class="setting-row"><div><b>CCTV 局部隱私遮罩</b><small>預設關閉。開啟時只遮罩畫面下緣近距離區域，保留大部分道路與車流可視；這是輕量 ROI 遮罩，不宣稱自動辨識人臉或車牌</small></div><button id="privacyShieldToggle" class="toggle" aria-pressed="false"><span></span></button></div>
+        <div class="system-box"><span>BUILD</span><b>SENTINEL // TAIWAN // 2.0.0 CF</b><span>PRIVACY</span><b>NO PLATE OCR · LOCATION SESSION ONLY</b></div>
+      </section>
+
+
+      <section id="cctvPopup" class="cctv-popup" aria-label="放大 CCTV 浮動視窗" hidden>
+        <div id="cctvPopupHandle" class="cctv-popup-head" role="toolbar" aria-label="拖曳 CCTV 視窗">
+          <div><span>LIVE CCTV // FLOATING VIEW</span><b id="cctvPopupTitle">PUBLIC CCTV</b></div>
+          <div class="cctv-popup-actions"><button type="button" id="cctvPopupAnalyze" aria-pressed="false">LIVE ANALYSIS</button><button type="button" id="cctvPopupClose" aria-label="關閉放大 CCTV">×</button></div>
+        </div>
+        <div id="cctvPopupStage" class="cctv-popup-stage"><div class="camera-placeholder">等待 CCTV 訊號…</div></div>
+        <div id="cctvPopupMeta" class="cctv-popup-meta">PUBLIC LIVE SOURCE</div>
+        <div id="cctvPopupSensor" class="camera-intel cctv-popup-sensor" hidden></div>
+      </section>
+
+      <section id="threatAlert" class="threat-alert" aria-live="assertive" hidden>
+        <div class="threat-scan"></div>
+        <div class="threat-frame">
+          <div class="threat-code">CONDITION RED // CORRIDOR COMPROMISED</div>
+          <h2 id="threatTitle">CRITICAL TRAFFIC ALERT</h2>
+          <p id="threatSummary">公開交通訊號顯示路線風險偏高。</p>
+          <div id="threatReasons" class="threat-reasons"></div>
+          <div class="threat-actions"><button id="threatCompare" class="primary-action">COMPARE ROUTES</button><button id="threatDismiss" class="ghost-action">ACKNOWLEDGE</button></div>
+        </div>
+      </section>
+      <div id="toast" class="toast" role="status" aria-live="polite"></div>
+    </main>
+
+    <nav class="mobile-dock hud-panel" aria-label="主要功能">
+      <button data-command="locate"><span>◎</span>定位</button>
+      <button data-command="cctv"><span>▣</span>CCTV</button>
+      <button data-command="intel"><span>▤</span>戰情</button>
+      <button data-command="voice"><span>◉</span>語音</button>
+    </nav>
+  </div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+  <script src="/app.js" defer></script>
+</body>
+</html>

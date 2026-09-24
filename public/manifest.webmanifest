@@ -1,0 +1,15 @@
+{
+  "name": "SENTINEL // TAIWAN",
+  "short_name": "Sentinel",
+  "description": "台灣公開訊號戰情室：全台監控、點擊鎖定、3D 航空追蹤、語音標註、感測器視覺、即時車流、CCTV 與透明資料來源。",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#08090a",
+  "theme_color": "#08090a",
+  "orientation": "any",
+  "icons": [
+    { "src": "/assets/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/assets/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
